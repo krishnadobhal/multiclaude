@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Remote sessions · multiclaude</title>
+  <script type="module" src="/remote.js"></script>
+  <style>
+    :root { color-scheme: dark; background: #141515; color: #f0ede6; font: 1rem/1.5 "Inter", system-ui, sans-serif; }
+    body { margin: 0; }
+    main { max-width: 48rem; margin: auto; padding: clamp(1.25rem, 5vw, 4rem); }
+    .brand { color: #e8ab88; margin: 0; }
+    h1 { font-size: clamp(2rem, 6vw, 3.25rem); letter-spacing: -.045em; line-height: 1.12; margin: .3em 0 .7em; }
+    label { display: block; margin-bottom: .4rem; }
+    input, button { font: inherit; max-width: 100%; }
+    button, input::file-selector-button {
+      border: 1px solid #625347; border-radius: .35rem; padding: .45rem .8rem;
+      color: inherit; background: #302923; cursor: pointer;
+    }
+    button:focus-visible, input:focus-visible { outline: 2px solid #e8ab88; outline-offset: 3px; }
+    button:disabled { opacity: .6; cursor: default; }
+    header, li { display: flex; align-items: baseline; gap: .75rem; flex-wrap: wrap; justify-content: space-between; }
+    section { border-top: 1px solid #45423d; padding-top: .9rem; margin-top: 1rem; }
+    h2 { margin: 0; font-size: 1.15rem; }
+    ul { list-style: none; padding: 0; margin: .5rem 0 0; }
+    li { padding: .5rem 0; }
+    code { overflow-wrap: anywhere; font-size: .88rem; }
+    p, span { color: #c7bfb4; }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="brand">multiclaude</p>
+    <h1>Remote sessions</h1>
+    <div id="unlock">
+      <label for="key">Choose your multiclaude access key file</label>
+      <input id="key" type="file">
+    </div>
+    <div id="actions" hidden>
+      <button id="refresh" type="button">Refresh sessions</button>
+      <button id="lock" type="button">Lock dashboard</button>
+    </div>
+    <p id="status" role="status"></p>
+    <div id="profiles"></div>
+  </main>
+</body>
+</html>
