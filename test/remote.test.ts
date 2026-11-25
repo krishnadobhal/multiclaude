@@ -53,9 +53,9 @@ async function listen(t: TestContext) {
     },
   };
   const server = remoteServer({ cert, key }, [
-    { owner: 'alice', name: 'main' }, { owner: 'alice', name: 'side' },
+    { owner: 'alice', name: 'main' }, { owner: 'alice', name: 'side', mock: true },
     { owner: 'alice', name: 'private' },
-    { owner: 'bob', name: 'main' }, { owner: 'bob', name: 'work' },
+    { owner: 'bob', name: 'main' }, { owner: 'bob', name: 'work', apiSecret: 'bob-secret' },
   ], () => grants, backend);
   const sockets = new Set<WebSocket>();
   t.after(async () => {
@@ -103,18 +103,29 @@ async function listen(t: TestContext) {
 }
 
 test('remote dashboard serves a public shell and keeps profile data behind the bearer grant', async t => {
-  const { ask } = await listen(t);
+  const { ask, create } = await listen(t);
   const page = await ask('/', '');
   assert.equal(page.status, 200);
   assert.match(page.headers['content-type'] ?? '', /^text\/html/);
   assert.match(page.headers['content-security-policy'] ?? '', /frame-ancestors 'none'/);
-  assert.match(page.body, /Remote sessions/);
+  assert.match(page.body, /Remote dashboard/);
+  assert.match(page.body, /href="\/app.css"/);
   assert.match(page.body, /src="\/remote.js"/);
   const script = await ask('/remote.js', '');
   assert.equal(script.status, 200);
   assert.match(script.headers['content-type'] ?? '', /^text\/javascript/);
-  assert.equal((await ask(profiles, '')).status, 401);
-  assert.deepEqual((await ask(profiles)).body, ['main', 'side']);
+  assert.match((await ask('/app.css', '')).headers['content-type'] ?? '', /^text\/css/);
+  assert.equal((await ask('/v1/dashboard', '')).status, 401);
+  assert.equal((await ask('/v1/dashboard', alice, 'GET', 'https://example.test')).status, 401);
+  const { id } = await create();
+  assert.deepEqual((await ask('/v1/dashboard')).body, [
+    { name: 'main', mode: 'subscription', sessions: [id] },
+    { name: 'side', mode: 'mock', sessions: [] },
+  ]);
+  assert.deepEqual((await ask('/v1/dashboard', bob)).body, [
+    { name: 'main', mode: 'subscription', sessions: [] },
+    { name: 'work', mode: 'api', sessions: [] },
+  ]);
 });
 
 test('remote TLS endpoints require a unique bearer grant and reject browser origins', { timeout: 10000 }, async t => {

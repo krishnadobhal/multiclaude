@@ -105,7 +105,7 @@ Run one foreground gateway per rootless service account. The command reads the T
 
 The full server command names are `mc server serve CONFIG`, `mc server login CONFIG OWNER PROFILE`, and `mc server keygen NEW_KEY_FILE`.
 
-Open the gateway's HTTPS URL in a browser to view the remote dashboard. Choose the same access key file you use with the CLI. The dashboard lists the running sessions for your granted profiles and provides a terminal attach command for each session. The page keeps the key in memory until you lock or close it.
+Open the gateway's HTTPS URL in a browser to view the remote dashboard. Choose the same access key file you use with the CLI. **Accounts** shows the authentication mode and running session count for each granted profile, with a command to start a session. **Sessions** lists running sessions and provides a terminal attach command for each. The page keeps the key in memory until you lock or close it.
 
 ## Connect from a terminal
 

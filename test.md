@@ -95,7 +95,7 @@ $work = .\mc.cmd r new work
 1. In `personal`, send a short prompt such as `What is 2 + 2? Reply with just the number.` Check that it answers `4`.
 2. Press **Ctrl+]** to detach. Run `.\mc.cmd r a work $work` from PowerShell and send a different prompt. Confirm that the first conversation is absent.
 3. Detach again and run `.\mc.cmd r a personal $personal`. The original prompt and reply should still be visible in that session. Detach once more before opening it from another terminal.
-4. Open [the remote dashboard](https://127.0.0.1:4881/) and choose the `laptop.key` file from `$remoteConfig`. For this loopback test, use your browser's trust settings for the certificate you generated if it warns about the self-signed certificate. Both profiles should show one running session. **Copy attach command** should copy a command for the matching session.
+4. Open [the remote dashboard](https://127.0.0.1:4881/) and choose the `laptop.key` file from `$remoteConfig`. For this loopback test, use your browser's trust settings for the certificate you generated if it warns about the self-signed certificate. **Accounts** should show one running session for each profile. In **Sessions**, **Copy attach command** should copy a command for the matching session.
 
 End the sessions from PowerShell, one at a time:
 

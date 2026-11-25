@@ -34,8 +34,12 @@ function loadConfig(path: string): Config {
 }
 
 export function remoteServer(tls: ServerOptions, profiles: Profile[], readGrants: () => Grant[], backend = runtime) {
-  const dashboard = readFileSync(new URL('../web/remote.html', import.meta.url));
-  const dashboardScript = readFileSync(new URL('../web/remote.js', import.meta.url));
+  const dashboardAssets = new Map([
+    ['/', ['remote.html', 'text/html; charset=utf-8']],
+    ['/remote.js', ['remote.js', 'text/javascript; charset=utf-8']],
+    ['/app.css', ['app.css', 'text/css; charset=utf-8']],
+    ['/icon.svg', ['icon.svg', 'image/svg+xml']],
+  ].map(([path, [file, type]]) => [path, { type, body: readFileSync(new URL('../web/' + file, import.meta.url)) }]));
   const wss = new WebSocketServer({ noServer: true, maxPayload: 65536, perMessageDeflate: false });
   const writers = new Map<string, WebSocket>();
   const starting = new Set<Profile>();
@@ -57,16 +61,16 @@ export function remoteServer(tls: ServerOptions, profiles: Profile[], readGrants
     return { profile: allowed(grant).find(p => p.name === match?.[1]), id: match?.[2] };
   }
   const server = createServer(tls, async (req, res) => {
-    if (req.method === 'GET' && (req.url === '/' || req.url === '/remote.js')) {
-      const html = req.url === '/';
+    const asset = req.method === 'GET' ? dashboardAssets.get(req.url ?? '') : undefined;
+    if (asset) {
       res.writeHead(200, {
-        'Content-Type': html ? 'text/html; charset=utf-8' : 'text/javascript; charset=utf-8',
+        'Content-Type': asset.type,
         'Cache-Control': 'no-store',
-        'Content-Security-Policy': "default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+        'Content-Security-Policy': "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
         'X-Content-Type-Options': 'nosniff',
         'Referrer-Policy': 'no-referrer',
       });
-      return res.end(html ? dashboard : dashboardScript);
+      return res.end(asset.body);
     }
     function reply(status: number, body: unknown = {}) {
       res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
@@ -75,6 +79,15 @@ export function remoteServer(tls: ServerOptions, profiles: Profile[], readGrants
     const grant = authorize(req);
     if (!grant) return reply(401);
     if (req.method === 'GET' && req.url === '/v1/profiles') return reply(200, allowed(grant).map(p => p.name));
+    if (req.method === 'GET' && req.url === '/v1/dashboard') {
+      try {
+        return reply(200, await Promise.all(allowed(grant).map(async p => ({
+          name: p.name,
+          mode: p.mock ? 'mock' : p.apiSecret ? 'api' : 'subscription',
+          sessions: await backend.list(p),
+        }))));
+      } catch { return reply(503); }
+    }
     const { profile, id } = route(req, grant);
     if (!profile) return reply(404);
     try {
